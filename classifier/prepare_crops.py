@@ -21,11 +21,18 @@ Output (this script will create):
         test/no-bird/*.jpg
 """
 
+import sys
 from pathlib import Path
 import argparse
 
 import cv2
 from tqdm import tqdm
+
+# --- make project root importable so "from utils.config" works ---
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+# -----------------------------------------------------------------
 
 from utils.config import (
     DATA_DIR,
@@ -144,7 +151,7 @@ def process_split(split_name: str, out_root: Path, margin_factor: float = 1.1):
 def main(margin_factor: float):
     ensure_dirs()
 
-    # Map YOLO's "valid" -> classifier's "val"
+    # Map YOLO's "train/valid/test" -> classifier's crop dirs
     process_split("train", CROP_TRAIN_DIR, margin_factor)
     process_split("valid", CROP_VAL_DIR, margin_factor)
     process_split("test", CROP_TEST_DIR, margin_factor)

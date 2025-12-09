@@ -1,66 +1,82 @@
-# -----------------------------
-# OS / Editor junk
-# -----------------------------
+###############################################
+# OS / EDITOR / CACHE
+###############################################
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-
-# -----------------------------
-# Python bytecode / cache
-# -----------------------------
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-*.pkl
 *.pickle
+*.pkl
 
-# -----------------------------
-# Virtual environment
-# -----------------------------
+###############################################
+# PYTHON / ENVIRONMENTS
+###############################################
 venv/
 .env
 *.env
 
-# -----------------------------
-# Training outputs / logs
-# -----------------------------
-runs_yolo/
-runs/
-results/
-logs/
-*.log
-*.txt~   # backup temp files
-
-# -----------------------------
-# YOLO / model weights
-# -----------------------------
+###############################################
+# MODEL WEIGHTS (KEEP ONLY FINAL MODELS)
+###############################################
+# Ignore all .pt except final YOLO + final ResNet
 *.pt
+!runs_yolo/yolov8m_bird_no_bird/weights/best.pt
+!classifier/weights/resnet50_best.pth
+
+# Ignore other model formats
 *.onnx
 *.engine
 *.tflite
 *.savedmodel
 *.h5
 
-# -----------------------------
-# Roboflow / dataset heavy files
-# (keep data.yaml + readme, ignore raw images & caches)
-# -----------------------------
+###############################################
+# TRAINING OUTPUTS / LOGS / EXPERIMENTS
+###############################################
+runs/
+runs_yolo/
+results/
+logs/
+*.log
+*.txt~
+*.tmp
+*.bak
+
+###############################################
+# CROPPED DATASETS (auto generated)
+###############################################
+classifier/crop_dataset/
+
+###############################################
+# YOLO DATASET: IGNORE IMAGE FILES ONLY
+###############################################
+# Keep metadata (data.yaml + readme), ignore images
 data/yolo_dataset/train/images/
 data/yolo_dataset/valid/images/
 data/yolo_dataset/test/images/
 
+# Ignore YOLO caches
 data/yolo_dataset/train/labels.cache
 data/yolo_dataset/valid/labels.cache
 data/yolo_dataset/test/labels.cache
 
-# If you later add other datasets, ignore their images too
+###############################################
+# GENERAL LARGE DATASET PATTERNS
+###############################################
 */dataset/*/images/
 */dataset/*/labels.cache
 
-# -----------------------------
-# Misc
-# -----------------------------
-*.tmp
-*.bak
+###############################################
+# TEST OUTPUTS
+###############################################
+# Save combined results locally but don't push to Git
+test_images/*_combined.jpg
+test_images/*.mp4
+test_images/*.jpg
+test_images/*.jpeg
+test_images/*.png
+test_images/*.webp
