@@ -1,0 +1,66 @@
+# -----------------------------
+# OS / Editor junk
+# -----------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# -----------------------------
+# Python bytecode / cache
+# -----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.pickle
+
+# -----------------------------
+# Virtual environment
+# -----------------------------
+venv/
+.env
+*.env
+
+# -----------------------------
+# Training outputs / logs
+# -----------------------------
+runs_yolo/
+runs/
+results/
+logs/
+*.log
+*.txt~   # backup temp files
+
+# -----------------------------
+# YOLO / model weights
+# -----------------------------
+*.pt
+*.onnx
+*.engine
+*.tflite
+*.savedmodel
+*.h5
+
+# -----------------------------
+# Roboflow / dataset heavy files
+# (keep data.yaml + readme, ignore raw images & caches)
+# -----------------------------
+data/yolo_dataset/train/images/
+data/yolo_dataset/valid/images/
+data/yolo_dataset/test/images/
+
+data/yolo_dataset/train/labels.cache
+data/yolo_dataset/valid/labels.cache
+data/yolo_dataset/test/labels.cache
+
+# If you later add other datasets, ignore their images too
+*/dataset/*/images/
+*/dataset/*/labels.cache
+
+# -----------------------------
+# Misc
+# -----------------------------
+*.tmp
+*.bak
