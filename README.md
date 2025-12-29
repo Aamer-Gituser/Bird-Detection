@@ -187,7 +187,5 @@ Developed for real-time bird detection in agricultural environments.
 
 ---
 
-## 📜 License
 
-This project is intended solely for academic and research purposes.  
-For commercial usage, please contact the author.
+
