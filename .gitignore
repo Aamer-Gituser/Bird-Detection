@@ -57,3 +57,4 @@ test_images/
 # ✅ allow only final weights
 !runs_yolo/yolov8m_bird_no_bird_v2/weights/best.pt
 !classifier/weights/resnet50_best_v2.pth
+!classifier/weights/resnet50_last_v2.pth
