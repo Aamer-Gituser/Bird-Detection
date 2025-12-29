@@ -1,8 +1,11 @@
 🐦 Bird Detection using YOLOv8 + ResNet-50 Refinement
 
-This project implements a deep learning–based real-time bird detection system for agricultural field surveillance using a two-stage pipeline consisting of YOLOv8 for object detection and ResNet-50 for refinement. The refiner removes false positives such as leaves, insects, shadows, and branches, resulting in higher detection precision. The project includes training, evaluation, inference, visualization, and deployment via a Flask web application.
+This project implements a deep learning–based real-time bird detection system designed for agricultural field surveillance. It uses a two-stage pipeline where YOLOv8 performs fast object detection and a ResNet-50 classifier refines detections to remove false positives such as leaves, insects, shadows, and branches.
+
+The system supports image, video, and webcam inference and includes training, evaluation, inference, and deployment via a Flask web application.
 
 📚 Table of Contents
+
 📦 Dataset
 🧠 Model Architecture
 📁 Project Structure
@@ -19,165 +22,172 @@ This project implements a deep learning–based real-time bird detection system 
 
 📦 Dataset
 
-The training and testing datasets are organized in the following structure (not included in the repository):
+The datasets used in this project are not included in the repository and are ignored using .gitignore to keep the repository lightweight.
 
-data/
-├── yolo_dataset/ # Used to train YOLOv8 (2 classes: bird, no-bird)
-├── yolo_dataset-2/
-├── crop_dataset/ # Crops for training ResNet-50 classifier
-└── crop_dataset-2/
+Dataset structure:
 
-⚠️ Note: These datasets are excluded using .gitignore to keep the repository lightweight.
+data
 
-Dataset Preparation:
+yolo_dataset (YOLOv8 dataset with bird and no-bird classes)
 
-YOLO datasets contain labeled bounding boxes for bird detection.
+yolo_dataset-2 (additional YOLO dataset)
 
-Crop datasets contain image patches extracted from YOLO detections.
+crop_dataset (cropped patches for ResNet-50 training)
 
-Use classifier/prepare_crops.py to generate crops for classifier training.
+crop_dataset-2
+
+Dataset description:
+
+YOLO datasets contain full images with bounding-box annotations
+
+Crop datasets contain small image patches extracted from YOLO detections
+
+Crop datasets are used to train the ResNet-50 classifier
+
+Dataset preparation:
+
+Use classifier/prepare_crops.py to generate crop datasets
+
+Run this step whenever the YOLO dataset is updated
+
+Note: Large datasets are intentionally excluded from GitHub.
 
 🧠 Model Architecture
 
-This system combines fast object detection with classification-based refinement:
+This system combines fast object detection with classification-based refinement.
 
-YOLOv8:
+YOLOv8 (Stage 1 – Detection):
 
-Detects candidate birds in full images or video frames.
+Detects bird-like objects in images and video frames
 
-Outputs bounding boxes with confidence scores.
+Produces bounding boxes with confidence scores
 
-Trained on two classes: bird and no-bird.
+Optimized for real-time performance
 
-ResNet-50:
+ResNet-50 (Stage 2 – Refinement):
 
-Takes cropped YOLO detections as input.
+Takes cropped YOLO detections as input
 
-Classifies each crop as bird or no-bird.
+Classifies each crop as bird or no-bird
 
-Filters out false detections.
+Filters out false positives before final output
 
 Task Type: Real-time object detection with refinement
-Domain: Agricultural field monitoring
+Domain: Agricultural field and crop protection monitoring
 
 📁 Project Structure
 
-bird_detection_project/
-├── app.py # Flask web application
-├── inference_combined.py # Unified inference script
-├── requirements.txt # Dependencies
-├── README.md
-│
-├── templates/
-│ ├── index.html
-│ └── result.html
-│
-├── static/ # Optional CSS / JS files
-│
-├── utils/
-│ ├── config.py
-│ └── visualization.py
-│
-├── pipeline/
-│ ├── inference_service.py
-│ └── detect_with_refiner.py
-│
-├── yolo_training/
-│ ├── train_yolov8.py
-│ └── infer_yolov8.py
-│
-├── classifier/
-│ ├── train_resnet50.py
-│ ├── prepare_crops.py
-│ ├── inference_resnet_utils.py
-│ ├── infer_resnet50.py
-│ └── weights/
-│ └── resnet50_best_v2.pth
-│
-├── runs_yolo/
-│ └── yolov8m_bird_no_bird_v2/
-│ └── weights/
-│ └── best.pt
-│
-└── data/ # Ignored datasets
+bird_detection_project
+
+app.py (Flask web application)
+
+inference_combined.py (CLI inference for image, video, webcam)
+
+requirements.txt (Python dependencies)
+
+README.md
+
+templates
+
+index.html (Upload page)
+
+result.html (Results display page)
+
+static (Optional CSS and JS files)
+
+utils
+
+config.py (Global constants and settings)
+
+pipeline
+
+inference_service.py (Combined YOLO + ResNet inference logic)
+
+yolo_training
+
+train_yolov8.py (YOLOv8 training script)
+
+classifier
+
+train_resnet50.py (ResNet-50 training script)
+
+prepare_crops.py (Crop dataset generator)
+
+inference_resnet_utils.py (ResNet inference utilities)
+
+weights
+
+resnet50_best_v2.pth (Trained classifier weights)
+
+runs_yolo
+
+yolov8m_bird_no_bird_v2
+
+weights
+
+best.pt (Trained YOLOv8 model)
+
+data (Ignored datasets)
 
 ⚙️ Installation
 
 Requirements:
 
-Python 3.10+
+Python 3.10 or higher
 
-Windows / Linux / macOS
+Windows, Linux, or macOS
 
 Dependencies listed in requirements.txt
 
 Steps:
 
-1️⃣ Clone the Repository
+Clone the repository and move into the project directory
 
-git clone <repository-url>
-cd bird_detection_project
+Create and activate a virtual environment (recommended)
 
-2️⃣ Create Virtual Environment (Recommended)
-
-Windows:
-python -m venv venv
-venv\Scripts\activate
-
-Linux / macOS:
-python3 -m venv venv
-source venv/bin/activate
-
-3️⃣ Install Dependencies
-
-pip install -r requirements.txt
+Install all required dependencies using requirements.txt
 
 🚀 Usage
 
-🔧 Train YOLOv8
-python yolo_training/train_yolov8.py
+Training:
 
-🔧 Train ResNet-50 Classifier
-python classifier/train_resnet50.py
+Train YOLOv8 using yolo_training/train_yolov8.py
 
-🧪 Run Inference (CLI)
+Train ResNet-50 classifier using classifier/train_resnet50.py
 
-Webcam:
-python inference_combined.py --source 0
+Inference (CLI):
 
-Image:
-python inference_combined.py --source test_images/sample.jpg --save
+Webcam inference using inference_combined.py with source 0
 
-Video:
-python inference_combined.py --source test_images/sample.mp4 --save
+Image inference by passing an image path
+
+Video inference by passing a video path
 
 🌐 Web Application
 
-Start the Flask server:
-python app.py
+Start the Flask server using app.py
 
-Then open your browser at:
-http://127.0.0.1:5000/
+Open the browser at http://127.0.0.1:5000/
 
-Upload an image or video to view refined bird detections.
+Upload an image or video to view refined bird detections
 
 💾 Saved Models
 
-The repository includes pretrained weights:
+The repository includes pretrained models for direct inference:
 
 YOLOv8 model
-runs_yolo/yolov8m_bird_no_bird_v2/weights/best.pt
+Location: runs_yolo/yolov8m_bird_no_bird_v2/weights/best.pt
 
 ResNet-50 classifier
-classifier/weights/resnet50_best_v2.pth
+Location: classifier/weights/resnet50_best_v2.pth
 
-These allow inference without retraining.
+These models allow inference without retraining.
 
 🛠 Features
 
 Two-stage detection pipeline for higher precision
 
-Filters false positives using classifier refinement
+Removes false positives using classifier refinement
 
 Supports image, video, and webcam input
 
@@ -185,7 +195,7 @@ Flask-based web interface
 
 Modular and extensible codebase
 
-Real-time performance
+Near real-time performance on GPU
 
 🧩 Dependencies
 
@@ -207,27 +217,31 @@ Matplotlib
 
 Pillow
 
-Install them using:
-
-pip install -r requirements.txt
-
 🧪 Examples
 
-Upload a farm surveillance video and detect only confirmed birds.
+Upload farm surveillance videos to detect only real birds
 
-Run webcam inference for real-time monitoring.
+Run webcam inference for live agricultural monitoring
 
-Compare YOLO-only vs refined detection accuracy.
+Compare YOLO-only detection versus refined detection accuracy
 
 🐞 Troubleshooting
 
-Flask app not running? ➜ Ensure Flask is installed and port 5000 is free.
+Flask app not starting:
 
-Model not found? ➜ Check paths to best.pt and resnet50_best_v2.pth.
+Ensure Flask is installed and port 5000 is free
 
-No detections? ➜ Verify input image size and lighting conditions.
+Model not found:
 
-Slow inference? ➜ Use GPU if available.
+Verify paths to best.pt and resnet50_best_v2.pth
+
+No detections:
+
+Check lighting conditions and input resolution
+
+Slow inference:
+
+Use GPU if available
 
 ✍️ Author
 
@@ -236,5 +250,5 @@ Developed for real-time bird detection in agricultural environments.
 
 📜 License
 
-This project is intended for academic and research purposes only.
+This project is intended solely for academic and research purposes.
 For commercial usage, please contact the author.
