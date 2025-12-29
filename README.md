@@ -2,69 +2,79 @@
 
 This project implements a deep learning–based real-time bird detection system designed for agricultural field surveillance. It uses a two-stage pipeline where YOLOv8 performs fast object detection and a ResNet-50 classifier refines detections to remove false positives such as leaves, insects, shadows, and branches.
 
-The system supports image, video, and webcam inference and includes training, evaluation, inference, and deployment via a Flask web application.
+It provides a complete pipeline—from dataset preparation and model training to inference and deployment via a Flask web application.
 
 📚 Table of Contents
 
 📦 Dataset
+
 🧠 Model Architecture
+
 📁 Project Structure
+
 ⚙️ Installation
+
 🚀 Usage
+
 🌐 Web Application
+
 💾 Saved Models
+
 🛠 Features
+
 🧩 Dependencies
+
 🧪 Examples
+
 🐞 Troubleshooting
+
 ✍️ Author
+
 📜 License
 
 📦 Dataset
 
 The datasets used in this project are not included in the repository and are ignored using .gitignore to keep the repository lightweight.
 
-Dataset structure:
+Dataset Structure
+data/
+├── yolo_dataset/        # YOLOv8 dataset (bird, no-bird)
+├── yolo_dataset-2/      # Additional YOLO dataset
+├── crop_dataset/        # Cropped patches for ResNet-50 training
+└── crop_dataset-2/
 
-data
-
-yolo_dataset (YOLOv8 dataset with bird and no-bird classes)
-
-yolo_dataset-2 (additional YOLO dataset)
-
-crop_dataset (cropped patches for ResNet-50 training)
-
-crop_dataset-2
-
-Dataset description:
+Dataset Description
 
 YOLO datasets contain full images with bounding-box annotations
+
+Classes: bird, no-bird
 
 Crop datasets contain small image patches extracted from YOLO detections
 
 Crop datasets are used to train the ResNet-50 classifier
 
-Dataset preparation:
+Dataset Preparation
 
-Use classifier/prepare_crops.py to generate crop datasets
+Generate crops for classifier training using:
 
-Run this step whenever the YOLO dataset is updated
+python classifier/prepare_crops.py
 
-Note: Large datasets are intentionally excluded from GitHub.
+
+⚠️ Note: Large datasets are intentionally excluded from GitHub.
 
 🧠 Model Architecture
 
 This system combines fast object detection with classification-based refinement.
 
-YOLOv8 (Stage 1 – Detection):
+YOLOv8 (Stage 1 – Detection)
 
 Detects bird-like objects in images and video frames
 
-Produces bounding boxes with confidence scores
+Outputs bounding boxes with confidence scores
 
 Optimized for real-time performance
 
-ResNet-50 (Stage 2 – Refinement):
+ResNet-50 (Stage 2 – Refinement)
 
 Takes cropped YOLO detections as input
 
@@ -76,118 +86,115 @@ Task Type: Real-time object detection with refinement
 Domain: Agricultural field and crop protection monitoring
 
 📁 Project Structure
-
-bird_detection_project
-
-app.py (Flask web application)
-
-inference_combined.py (CLI inference for image, video, webcam)
-
-requirements.txt (Python dependencies)
-
-README.md
-
-templates
-
-index.html (Upload page)
-
-result.html (Results display page)
-
-static (Optional CSS and JS files)
-
-utils
-
-config.py (Global constants and settings)
-
-pipeline
-
-inference_service.py (Combined YOLO + ResNet inference logic)
-
-yolo_training
-
-train_yolov8.py (YOLOv8 training script)
-
-classifier
-
-train_resnet50.py (ResNet-50 training script)
-
-prepare_crops.py (Crop dataset generator)
-
-inference_resnet_utils.py (ResNet inference utilities)
-
-weights
-
-resnet50_best_v2.pth (Trained classifier weights)
-
-runs_yolo
-
-yolov8m_bird_no_bird_v2
-
-weights
-
-best.pt (Trained YOLOv8 model)
-
-data (Ignored datasets)
+bird_detection_project/
+├── app.py                         # Flask web application
+├── inference_combined.py          # CLI inference (image/video/webcam)
+├── requirements.txt               # Python dependencies
+├── README.md
+│
+├── templates/
+│   ├── index.html                 # Upload page
+│   └── result.html                # Results display page
+│
+├── static/                        # Optional CSS / JS
+│
+├── utils/
+│   └── config.py                  # Global constants
+│
+├── pipeline/
+│   └── inference_service.py       # Combined YOLO + ResNet inference
+│
+├── yolo_training/
+│   └── train_yolov8.py            # YOLOv8 training
+│
+├── classifier/
+│   ├── train_resnet50.py          # ResNet-50 training
+│   ├── prepare_crops.py           # Crop dataset generator
+│   ├── inference_resnet_utils.py  # ResNet inference
+│   └── weights/
+│       └── resnet50_best_v2.pth
+│
+├── runs_yolo/
+│   └── yolov8m_bird_no_bird_v2/
+│       └── weights/
+│           └── best.pt
+│
+└── data/                          # Ignored datasets
 
 ⚙️ Installation
-
-Requirements:
+Requirements
 
 Python 3.10 or higher
 
-Windows, Linux, or macOS
+Windows / Linux / macOS
 
 Dependencies listed in requirements.txt
 
-Steps:
+Setup Steps
 
-Clone the repository and move into the project directory
+Create a virtual environment and install dependencies:
 
-Create and activate a virtual environment (recommended)
-
-Install all required dependencies using requirements.txt
+pip install -r requirements.txt
 
 🚀 Usage
+Training
 
-Training:
+Train YOLOv8:
 
-Train YOLOv8 using yolo_training/train_yolov8.py
+python yolo_training/train_yolov8.py
 
-Train ResNet-50 classifier using classifier/train_resnet50.py
 
-Inference (CLI):
+Train ResNet-50:
 
-Webcam inference using inference_combined.py with source 0
+python classifier/train_resnet50.py
 
-Image inference by passing an image path
+Inference (CLI)
 
-Video inference by passing a video path
+Webcam:
+
+python inference_combined.py --source 0
+
+
+Image:
+
+python inference_combined.py --source test_images/sample.jpg --save
+
+
+Video:
+
+python inference_combined.py --source test_images/sample.mp4 --save
 
 🌐 Web Application
 
-Start the Flask server using app.py
+Start the Flask server:
 
-Open the browser at http://127.0.0.1:5000/
+python app.py
 
-Upload an image or video to view refined bird detections
+
+Open in browser:
+
+http://127.0.0.1:5000/
+
+
+Upload an image or video to view refined bird detections.
 
 💾 Saved Models
 
-The repository includes pretrained models for direct inference:
+Pretrained models included for direct inference:
 
-YOLOv8 model
-Location: runs_yolo/yolov8m_bird_no_bird_v2/weights/best.pt
+YOLOv8
+runs_yolo/yolov8m_bird_no_bird_v2/weights/best.pt
 
-ResNet-50 classifier
-Location: classifier/weights/resnet50_best_v2.pth
+ResNet-50
+classifier/weights/resnet50_best_v2.pth
 
-These models allow inference without retraining.
+No retraining is required for inference.
 
 🛠 Features
 
 Two-stage detection pipeline for higher precision
 
-Removes false positives using classifier refinement
+Eliminates false positives using classifier refinement
 
 Supports image, video, and webcam input
 
@@ -199,9 +206,7 @@ Near real-time performance on GPU
 
 🧩 Dependencies
 
-All dependencies are listed in requirements.txt.
-
-Major libraries include:
+Major libraries used:
 
 Ultralytics YOLOv8
 
@@ -219,28 +224,24 @@ Pillow
 
 🧪 Examples
 
-Upload farm surveillance videos to detect only real birds
+Upload farm surveillance videos and detect only real birds
 
 Run webcam inference for live agricultural monitoring
 
-Compare YOLO-only detection versus refined detection accuracy
+Compare YOLO-only vs refined detection accuracy
 
 🐞 Troubleshooting
 
-Flask app not starting:
-
+Flask app not starting
 Ensure Flask is installed and port 5000 is free
 
-Model not found:
-
+Model not found
 Verify paths to best.pt and resnet50_best_v2.pth
 
-No detections:
+No detections
+Check lighting conditions and image resolution
 
-Check lighting conditions and input resolution
-
-Slow inference:
-
+Slow inference
 Use GPU if available
 
 ✍️ Author
