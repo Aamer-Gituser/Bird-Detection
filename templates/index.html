@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Bird Detection – Upload{% endblock %}
+
+{% block content %}
+  <form method="post" enctype="multipart/form-data" class="upload-form">
+    <label>Select an image or video:</label>
+    <input type="file" name="file" accept="image/*,video/*" required />
+    <button type="submit">Run Detection</button>
+  </form>
+
+  <p class="note">
+    Uploaded file and output will be saved under <code>test_images/</code>.
+  </p>
+{% endblock %}

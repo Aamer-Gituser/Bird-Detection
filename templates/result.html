@@ -1,0 +1,106 @@
+<!-- templates/result.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>YOLOv8 + ResNet Bird Detector - Result</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <style>
+      body {
+        background: #111;
+        color: #eee;
+      }
+      .card {
+        background: #181818;
+        border-radius: 12px;
+        border: 1px solid #333;
+      }
+      video,
+      img {
+        border-radius: 8px;
+        max-height: 420px;
+        width: 100%;
+        object-fit: contain;
+        background: #000;
+      }
+      .muted-note {
+        color: #aaa;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container py-4">
+      <a
+        href="{{ url_for('index') }}"
+        class="text-decoration-none mb-3 d-inline-block"
+      >
+        ← Back
+      </a>
+
+      <h2 class="mb-4">YOLOv8 + ResNet Bird Detector</h2>
+
+      {# Cache buster to force browser to reload mp4 after new upload #}
+      {% set cb = result.runtime %}
+
+      <div class="row g-4">
+        <!-- Input -->
+        <div class="col-md-6">
+          <div class="card p-3">
+            <h5 class="mb-3">Input</h5>
+
+            {% if result.type == 'video' %}
+            <video controls preload="metadata" playsinline>
+              <source src="{{ result.input_url }}?v={{ cb }}" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <div class="muted-note mt-2">Input video (original)</div>
+            {% else %}
+            <img src="{{ result.input_url }}?v={{ cb }}" alt="Input image" />
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Output -->
+        <div class="col-md-6">
+          <div class="card p-3">
+            <h5 class="mb-3">Output (YOLO + ResNet)</h5>
+
+            {% if result.output_url %}
+              {% if result.type == 'video' %}
+              <video controls preload="metadata" playsinline>
+                <source src="{{ result.output_url }}?v={{ cb }}" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+              <div class="muted-note mt-2">
+                Output video (processed) — if it shows 0:00, refresh once.
+              </div>
+              {% else %}
+              <img src="{{ result.output_url }}?v={{ cb }}" alt="Output image" />
+              {% endif %}
+            {% else %}
+            <p>No output file generated.</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="card mt-4 p-3">
+        <h5 class="mb-3">Inference Details</h5>
+        <ul class="mb-0">
+          <li>Type: {{ result.type }}</li>
+          <li>Frames processed: {{ result.num_frames }}</li>
+          <li>YOLO bird detections: {{ result.num_yolo_bird }}</li>
+          <li>Kept after classifier: {{ result.num_kept_after_clf }}</li>
+          <li>Runtime: {{ '%.2f'|format(result.runtime) }} s</li>
+          <li>Output file: {{ result.output_filename }}</li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
