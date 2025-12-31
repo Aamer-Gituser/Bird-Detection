@@ -32,7 +32,6 @@ classifier/crop_dataset-2/
 # TRAINING RUNS / OUTPUTS (DO NOT UPLOAD)
 ###############################################
 runs/
-runs_yolo/
 results/
 logs/
 *.log
