@@ -1,10 +1,11 @@
-# webcam_to_arduino_serial_fixed_v2.py
-# ✅ Changes you asked:
-# 1) Removed center-block gate + removed drawing of center block rectangle
-# 2) CONFIRM time = 1.3 sec
-# 3) COOLDOWN time = 2.0 sec
-# 4) Keeps: box drawing + terminal logs + Arduino pulse "1\n" then "0\n"
-# 5) Auto-detects Arduino COM port (still supports --port COMx)
+# webcam_to_arduino_serial_fixed_auto_cam.py
+# ✅ What this version does:
+# 1) Auto-selects camera by default (tries 0,1,2,3...) -> picks the first that returns frames
+#    - You can still force with: --cam 0  OR  --cam 1  OR  --cam rtsp://...
+# 2) Auto-detects Arduino COM port (still supports --port COMx)
+# 3) CONFIRM time = 1.3 sec, COOLDOWN time = 2.0 sec
+# 4) Sends ONLY ONE Arduino pulse when confirmed: "1\n" then "0\n"
+# 5) Keeps: box drawing + terminal logs + motion gate + ResNet influence
 
 import cv2
 import time
@@ -21,16 +22,17 @@ YOLO_WEIGHTS = r"D:\Projects\Bird Detection\bird_detection_project\runs_yolo\yol
 RESNET_WEIGHTS = r"D:\Projects\Bird Detection\bird_detection_project\classifier\weights\resnet50_best_v2.pth"
 USE_RESNET = True
 
-CAM_SOURCE = 0  # laptop webcam default
+# Camera:
+# - default is "auto" (tries 0,1,2,3...)
+CAM_SOURCE_DEFAULT = "auto"
+AUTO_CAM_MAX_INDEX = 6         # try 0..5
 
 SERIAL_ENABLED = True
 SERIAL_BAUD = 9600
 
-# ✅ confirm + cooldown (updated)
 CONFIRM_SEC = 1.3
 COOLDOWN_SEC = 2.0
 
-# Arduino pulse
 PULSE_WIDTH_SEC = 0.10
 
 # YOLO
@@ -38,7 +40,7 @@ YOLO_CONF = 0.18
 YOLO_IOU = 0.50
 MAX_DETS = 30
 
-# Geometry filters (strict to kill false positives)
+# Geometry filters
 MIN_BOX_AREA = 0.001
 MAX_BOX_AREA = 0.10
 MIN_BOX_W = 18
@@ -116,6 +118,7 @@ def passes_geom_filters(x1, y1, x2, y2, w, h) -> bool:
     return True
 
 
+# ------------------ Serial helpers ------------------
 def list_serial_ports():
     ports = list_ports.comports()
     out = []
@@ -204,10 +207,81 @@ class SerialOut:
         self.send_line("0\n")
 
 
+# ------------------ Camera helpers ------------------
+def try_open_camera(index: int, backend=None, warmup_frames: int = 8):
+    """
+    Try opening a camera index and ensure it actually returns frames.
+    Returns cap if OK else None.
+    """
+    if backend is None:
+        cap = cv2.VideoCapture(index)
+    else:
+        cap = cv2.VideoCapture(index, backend)
+
+    if not cap.isOpened():
+        cap.release()
+        return None
+
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
+    ok_any = False
+    frame = None
+    for _ in range(warmup_frames):
+        ok, f = cap.read()
+        if ok and f is not None and f.size > 0:
+            ok_any = True
+            frame = f
+            break
+
+    if not ok_any:
+        cap.release()
+        return None
+
+    # simple score: prefer higher resolution
+    h, w = frame.shape[:2]
+    score = w * h
+    return cap, score
+
+
+def auto_select_camera(max_index: int = AUTO_CAM_MAX_INDEX):
+    """
+    Tries camera indices 0..max_index-1, returns the best one.
+    Strategy:
+    - open each and check it returns frames
+    - pick the one with highest initial resolution (often external cams)
+    """
+    best = None
+    best_score = -1
+    best_idx = None
+
+    # Try CAP_DSHOW first on Windows for better reliability; fallback to default.
+    backends = [cv2.CAP_DSHOW, None]
+
+    for backend in backends:
+        for idx in range(max_index):
+            res = try_open_camera(idx, backend=backend)
+            if res is None:
+                continue
+            cap, score = res
+            if score > best_score:
+                if best is not None:
+                    best.release()
+                best = cap
+                best_score = score
+                best_idx = idx
+            else:
+                cap.release()
+
+        if best is not None:
+            return best, best_idx, best_score
+
+    return None, None, None
+
+
 def parse_args():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cam", type=str, default=str(CAM_SOURCE),
-                    help="Camera source: 0/1/2 or RTSP/URL path")
+    ap.add_argument("--cam", type=str, default=str(CAM_SOURCE_DEFAULT),
+                    help="Camera source: auto (default), 0/1/2..., or RTSP/URL/path")
     ap.add_argument("--port", type=str, default="",
                     help="Force serial port, e.g. COM5. If empty, auto-detect.")
     ap.add_argument("--baud", type=int, default=SERIAL_BAUD,
@@ -220,10 +294,30 @@ def parse_args():
 def main():
     args = parse_args()
 
-    cam_src = args.cam
-    if isinstance(cam_src, str) and cam_src.isdigit():
-        cam_src = int(cam_src)
+    # ---------------- Camera init ----------------
+    cam_arg = (args.cam or "").strip()
 
+    cap = None
+    cam_used = None
+
+    if cam_arg.lower() == "auto" or cam_arg == "":
+        cap, cam_used, cam_score = auto_select_camera(max_index=AUTO_CAM_MAX_INDEX)
+        if cap is None:
+            raise RuntimeError("❌ No working camera found in auto mode. Try --cam 0 or --cam 1.")
+        print(f"[INFO] Auto camera selected: index={cam_used} (score={cam_score})")
+    else:
+        # allow int or string URL/path
+        cam_src = cam_arg
+        if cam_src.isdigit():
+            cam_src = int(cam_src)
+        cap = cv2.VideoCapture(cam_src)
+        if not cap.isOpened():
+            raise RuntimeError("❌ Camera not accessible. Try: --cam auto, --cam 0 (laptop), --cam 1 (USB).")
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        cam_used = cam_src
+        print(f"[INFO] Using camera: {cam_used}")
+
+    # ---------------- Models ----------------
     print("[INFO] Loading YOLO:", YOLO_WEIGHTS)
     yolo = YOLO(YOLO_WEIGHTS)
 
@@ -233,13 +327,7 @@ def main():
         from classifier.inference_resnet_utils import ResNetBirdClassifier
         clf = ResNetBirdClassifier(weights_path=RESNET_WEIGHTS)
 
-    cap = cv2.VideoCapture(cam_src)
-    if not cap.isOpened():
-        raise RuntimeError("❌ Camera not accessible. Try: --cam 0 (laptop), --cam 1 (USB).")
-
-    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-
-    # Serial init
+    # ---------------- Serial init ----------------
     ser_out = None
     if SERIAL_ENABLED and (not args.no_serial):
         preferred = args.port.strip() if args.port else None
@@ -255,7 +343,7 @@ def main():
                 print(f"[WARN] Could not open serial port {port}: {e}")
                 ser_out = None
 
-    # Stabilizers
+    # ---------------- Stabilizers ----------------
     pos_buf = deque(maxlen=WINDOW_SIZE)
     neg_buf = deque(maxlen=WINDOW_SIZE)
 
@@ -267,7 +355,6 @@ def main():
     cooldown_until = 0.0
     last_print = 0.0
 
-    # Motion
     prev_gray = None
 
     print("[INFO] Running... Press 'q' to quit.")
@@ -323,7 +410,7 @@ def main():
         if score > 0 and best_nobird_conf > 0 and score < best_nobird_conf + NO_BIRD_MARGIN:
             score *= NO_BIRD_SUPPRESS_MULT
 
-        # motion gate (reduce false positives)
+        # motion gate
         motion_ok = True
         if MOTION_ENABLED and best_bird is not None and prev_gray is not None:
             x1, y1, x2, y2 = best_bird
@@ -331,7 +418,7 @@ def main():
             roi_prev = prev_gray[y1:y2, x1:x2]
             if roi_now.size > 0 and roi_prev.size > 0:
                 diff = cv2.absdiff(roi_now, roi_prev)
-                changed = (diff > MOTION_DIFF_TH).mean()  # fraction changed
+                changed = (diff > MOTION_DIFF_TH).mean()
                 motion_ok = changed >= MOTION_MIN_FRAC
             else:
                 motion_ok = False
@@ -400,7 +487,7 @@ def main():
             conf_t = 0.0 if confirm_started_at is None else (now - confirm_started_at)
             cool_left = max(0.0, cooldown_until - now)
             print(
-                f"stable={stable_bird} score={score:.2f} ema={ema_score:.2f} "
+                f"cam={cam_used} stable={stable_bird} score={score:.2f} ema={ema_score:.2f} "
                 f"yolo_bird={best_bird_conf:.2f} nobird={best_nobird_conf:.2f} "
                 f"motion={'OK' if motion_ok else 'NO'} "
                 f"confirm={conf_t:.1f}/{CONFIRM_SEC:.1f}s cooldown_left={cool_left:.1f}s "
@@ -412,19 +499,19 @@ def main():
         cool_left = max(0.0, cooldown_until - now)
         conf_t = 0.0 if confirm_started_at is None else (now - confirm_started_at)
 
-        cv2.putText(frame, f"STABLE_BIRD={stable_bird}", (20, 45),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0,
-                    (0, 255, 0) if stable_bird else (0, 0, 255), 3)
+        cv2.putText(frame, f"CAM={cam_used} STABLE_BIRD={stable_bird}", (20, 45),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.9,
+                    (0, 255, 0) if stable_bird else (0, 0, 255), 2)
 
         if cool_left > 0:
-            cv2.putText(frame, f"COOLDOWN: {cool_left:.1f}s", (20, 85),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 255), 2)
+            cv2.putText(frame, f"COOLDOWN: {cool_left:.1f}s", (20, 80),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 255, 255), 2)
         elif stable_bird == 1:
-            cv2.putText(frame, f"CONFIRMING: {conf_t:.1f}/{CONFIRM_SEC:.1f}s", (20, 85),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 0), 2)
+            cv2.putText(frame, f"CONFIRMING: {conf_t:.1f}/{CONFIRM_SEC:.1f}s", (20, 80),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 0), 2)
 
-        cv2.putText(frame, f"MOTION={'OK' if motion_ok else 'NO'}", (20, 120),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2)
+        cv2.putText(frame, f"MOTION={'OK' if motion_ok else 'NO'}", (20, 110),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
 
         if best_bird is not None:
             x1, y1, x2, y2 = best_bird
@@ -433,16 +520,16 @@ def main():
             if resnet_score is not None:
                 label += f" r={resnet_score:.2f}"
             cv2.putText(frame, label, (x1, max(20, y1 - 10)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 255), 2)
 
         if SHOW_DEBUG:
-            y = 155
+            y = 150
             for line in debug_lines:
                 cv2.putText(frame, line, (20, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.65, (255, 255, 255), 2)
-                y += 22
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+                y += 20
 
-        cv2.imshow("Bird/No-Bird -> Arduino (1.3s Confirm + 2.0s Cooldown)", frame)
+        cv2.imshow("Bird/No-Bird -> Arduino (AUTO CAM + Auto COM)", frame)
         prev_gray = gray
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
