@@ -1,5 +1,3 @@
-[![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-blue?logo=kaggle)](https://www.kaggle.com/datasets/khanaamer/bird-detection-dataset)
-
 # 🐦 Bird Detection using YOLOv8 + ResNet-50 Refinement
 
 This project implements a deep learning–based real-time bird detection system designed for agricultural field surveillance. It uses a two-stage pipeline where YOLOv8 performs fast object detection and a ResNet-50 classifier refines detections to remove false positives such as leaves, insects, shadows, and branches.
@@ -7,6 +5,14 @@ This project implements a deep learning–based real-time bird detection system 
 It provides a complete pipeline—from dataset preparation and model training to inference and deployment via a Flask web application.
 
 ---
+
+[![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-blue?logo=kaggle)](https://www.kaggle.com/datasets/khanaamer/bird-detection-dataset)
+[![YOLOv8](https://img.shields.io/badge/Model-YOLOv8-red)](https://docs.ultralytics.com/)
+[![ResNet50](https://img.shields.io/badge/Model-ResNet--50-blue)](https://pytorch.org/vision/stable/models/resnet.html)
+[![Computer Vision](https://img.shields.io/badge/Domain-Bird%20Detection-orange)](#)
+[![Python](https://img.shields.io/badge/Python-3.10-green)](https://www.python.org/)
+[![Status](https://img.shields.io/badge/Status-Completed-brightgreen)](#)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey)](LICENSE)
 
 ## 📚 Table of Contents
 
