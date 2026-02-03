@@ -26,6 +26,11 @@ It provides a complete pipeline—from dataset preparation and model training to
 
 ## 📦 Dataset
 
+The dataset used in this project is publicly available on Kaggle:
+
+🔗 **Bird Detection Dataset (YOLOv8 + ResNet-50)**  
+https://www.kaggle.com/datasets/khanamer/bird-detection-dataset
+
 The datasets used in this project are not included in the repository and are ignored using `.gitignore` to keep the repository lightweight.
 
 ### Dataset Structure
