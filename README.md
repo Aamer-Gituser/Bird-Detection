@@ -1,4 +1,4 @@
-[![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-blue?logo=kaggle)](https://www.kaggle.com/datasets/khanamer/bird-detection-dataset)
+[![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-blue?logo=kaggle)](https://www.kaggle.com/datasets/khanaamer/bird-detection-dataset)
 
 # 🐦 Bird Detection using YOLOv8 + ResNet-50 Refinement
 
@@ -31,7 +31,7 @@ It provides a complete pipeline—from dataset preparation and model training to
 The dataset used in this project is publicly available on Kaggle:
 
 🔗 **Bird Detection Dataset (YOLOv8 + ResNet-50)**  
-https://www.kaggle.com/datasets/khanamer/bird-detection-dataset
+https://www.kaggle.com/datasets/khanaamer/bird-detection-dataset
 
 The datasets used in this project are not included in the repository and are ignored using `.gitignore` to keep the repository lightweight.
 
