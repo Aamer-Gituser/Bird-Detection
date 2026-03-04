@@ -1,7 +1,6 @@
 # 🐦 Bird Detection using YOLOv8 + ResNet-50 Refinement
 
 This project implements a deep learning–based real-time bird detection system designed for agricultural field surveillance. It uses a two-stage pipeline where YOLOv8 performs fast object detection and a ResNet-50 classifier refines detections to remove false positives such as leaves, insects, shadows, and branches.
-
 It provides a complete pipeline—from dataset preparation and model training to inference and deployment via a Flask web application.
 
 ---
