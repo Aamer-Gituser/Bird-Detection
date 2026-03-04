@@ -43,7 +43,7 @@ The datasets used in this project are not included in the repository and are ign
 
 ### Dataset Structure
 
-data/
+data:
 - yolo_dataset        (YOLOv8 dataset with bird and no-bird classes)
 - yolo_dataset-2      (Additional YOLO dataset)
 - crop_dataset        (Cropped patches for ResNet-50 training)
